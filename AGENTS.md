@@ -1,71 +1,68 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
+# EHF Volunteer Hub V3 — Frontend
 
-## What Lovable manages
+Rules for agents and contributors working in this repository.
 
-Rules outside this block are the project's own. Change the pieces below in
-Lovable, not by hand. With the [Lovable MCP](https://mcp.lovable.dev)
-connected, `send_message` asks Lovable to do it; otherwise ask the user to
-use the editor.
+## Repository boundaries
 
-- **Database.** Do not add or edit `supabase/migrations/` or `drizzle/`.
-  Ask Lovable to change the schema.
-- **Generated files.** Do not edit a file whose header says it is automatically
-  generated.
-- **AI gateway.** Keep model calls on Lovable's gateway, and keep
-  `LOVABLE_API_KEY` out of browser code.
-- **Connectors.** Lovable provides native connectors. `list_connectors` shows
-  which are enabled; `add_connector` only returns the dashboard link. When a
-  connector is enabled, calls go through the connector gateway and need
-  `LOVABLE_API_KEY`. When Lovable does not provide one, users can bring their
-  own key and store it in Secrets.
-- **Secrets.** Lovable manages them. Do not put secret values in the repo.
-<!-- LOVABLE:END -->
+- This repository is the V3 **frontend only**: React UI, page components, the typed API client and frontend tests.
+- The backend lives in `Nazikzain/ehf-volunteer-hub-v3-api` (PHP 8.3, MySQL, REST API under `/api/v3`, OpenAPI contract). Authentication, authorisation, business rules, persistence and private file storage belong there, never here.
+- `Nazikzain/ehf-volunteer-hub-v3` is the original frontend repository (its README states it is connected to Lovable). Treat it as read-only reference: never push to it and never copy its Git history.
+- The previous backend and database are retired. Never add, copy or adapt its PHP code, SQL, endpoints, configuration, credentials or password hashes.
 
-- Volunteer Hub is a frontend prototype: all figures come from `src/lib/demo-data.ts` until the organisation's PHP backend is connected; never show fake success/references as real.
-- Admin (`/admin/*`) and volunteer (`/portal/*`) areas share `components/ehf/AppShell`; public pages use `PublicLayout` — keep navigation consistent through these.
-- Admin area (/admin/*) is locked behind ADMIN_LOGIN_CONNECTED in src/routes/admin.tsx until the PHP admin login is integrated; why: no real auth exists yet.
-- Public Admin Dashboard button target comes from VITE_ADMIN_LOGIN_URL (https only); unset falls back to locked /admin. Why: live PHP login URL not confirmed yet.
-- Admin Demo Mode (isPreviewHost + ADMIN_DEMO_MODE_FORCED in src/lib/admin-login.ts) opens /admin with synthetic in-memory data on Lovable preview hosts (checked by hostname after hydration, since built previews are production builds), the dev server, or VITE_ADMIN_DEMO_MODE="true"; the published domain stays locked. Why: lets the client review the dashboard before the PHP backend exists. Remove at Backend Integration.
+## Secrets and personal data
 
-- Phase 2 attendance and certificate views share a tab-scoped external store and pure workflow functions; why: approvals, eligibility, reports and profile totals must agree without backend persistence.
-- Attendance detail selection and issued-only certificate history use pure selectors; certificate edits rederive approved hours and append history, so presentation never changes source attendance or volunteer identity.
-- Demo organisational actions resolve current per-account grants through the shared permission evaluator, including action and project scope; why: stale actors and menu access must not bypass revocations.
-- Document generation runs in browser event handlers with pdf-lib and dynamically imported ExcelJS; why: real demo downloads must not require server integrations.
-- PDF previews dynamically load PDF.js and its bundled worker after hydration; why: certificates must render without a browser PDF plug-in and without server-side browser imports.
-- Demo portal provisioning uses a separate tab-memory account store with deterministic expiring single-use simulation markers; why: acceptance and access must remain separate without real authentication or password persistence.
-- Portal views derive volunteer identity from an active simulated account and a shared actor context; why: every portal screen must scope records to the same Volunteer ID rather than hardcoded names.
-- Demo account and grant management uses the technical-only Users & Permissions page and a tab-scoped external store; why: preserve a single synthetic account/grant model without adding authentication or persistent credentials.
-- Admin preview identity is selected by account, never a separate role switch; technical provisioning resolves the current active account through the shared evaluator, so labels alone cannot confer authority.
-- Application decisions read the latest tab workflow state and guard in-flight actions; why: repeated clicks must never replay a stale acceptance or duplicate a profile.
-- Portal projects, assignments, tasks, report versions, performance and notifications share the tab-scoped portal workflow store keyed by Volunteer ID; why: admin review and volunteer views must read back identical demo records.
-- Final certificate criteria read approved attendance and authorised period completion across all projects; why: eligibility never creates per-project certificates or bypasses unresolved approvals.
-- One-click portal review entry uses an isolated synthetic fixture in the existing tab stores and the preview-host gate; why: review access must not alter other volunteers, introduce authentication or expose production access. Its pre-issued final certificate covers the closed historical period, not current tasks.
-- Restore the review-only portal after hydration from a tab-scoped non-secret demo-selection marker, cleared on exit; why: refreshing must retain password-free review access without persisting credentials or synthetic records. Refresh recreates original fixtures; simulated account forms remain separate and opt-in.
-- Performance reviews use pure scoped workflow functions and shared evaluation rendering; drafts retain the last publication, each save appends a snapshot and audit entry, and only owned published evaluations reach portal views. Why: edits must preserve history without exposing unpublished changes or divergent review datasets.
-- Volunteer hours use a dedicated manual-only view and a schema-validated pure submission function against current active assignments; why: remove volunteer automatic controls and listings without changing administrator review or historical attendance.
-- Default workspace routes select PHP after hydration; demo requires an explicit preview-only query. Local PHP uses exact-origin CORS and native cookies/CSRF; nonlocal connections require a verified HTTPS API setting and never fall back to demo.
-- All PHP reads, mutations, uploads and downloads resolve the same validated connection helper; the future hosting target is documentation-only until verified, because an intended hostname is not a deployed service.
-- Homepage uses dedicated presentation components with the existing credentialed PHP session/login adapter; native sessions select the appropriate workspace, and the retired registration route redirects home. Why: visual redesign must not duplicate authentication or expose discontinued submissions.
-- PHP manual-hours project choices come from active assignments independently of task assignments; why: a volunteer may log authorised project work before a task is assigned.
-- Connected local workspaces use PHP session capability DTOs and confirmed screen/mutation requests inside the shared shell; why: connected screens must not consume demo stores or infer authority from role labels.
-- Public application receipts are shown only from an in-memory confirmed PHP response, never URL parameters; why: a fabricated query must not appear to confirm submission, and form fields must be preserved by PHP.
-- Keep the disabled PHP handoff source in `php-integration`, outside the frontend import graph; disposable active fixtures and database files stay under `/tmp` so runtime resets cannot erase source or expose test authority.
-- Recover PHP tests through the guarded source-controlled Python runner against one owned socket-only schema; source-copy fixture activation never enters release code because resets must be recoverable without exposing authority.
-- Generate activation/recovery links through the PHP AccountLinks origin validator; native cookies allow configured SameSite=None only with Secure because split-hosting must retain PHP identity and CSRF protection.
-- PHP report downloads intersect source-screen visibility with independent export scope; unsupported Unicode/oversized PDFs fail explicitly rather than clipping confidential or unreadable output.
-- ReportQuery uses fixed SQL projections, independent read/export scope intersections, database date/search/order/count and bounded batches; why: exports must not repeatedly materialise entire screen datasets or leak out-of-scope rows.
+- This repository is public. Never commit passwords, API keys, tokens, private credentials, `.env` files or real personal information.
+- Frontend configuration may hold public values only (for example the API base URL). Database credentials and backend secrets never appear in frontend code.
+- Demo records use reserved example data only: `example.org` / `*.invalid` email addresses and `07700 900xxx` phone numbers.
 
-- Connected dashboard metrics use SQL aggregates and dependent selections use searchable 100-row pages; why: scoped counts remain accurate without materialising every record.
-- Record corrections and technical checks use exact action gates and atomic history; issued-period source hours cannot change until certificate revocation, because issued evidence must remain trustworthy.
-- Build external PHP hosting packages with an explicit migration allowlist, private app/public-controller separation and no legacy installers or synthetic fixtures; why: packaging must not activate policy, leak credentials or blindly migrate existing hosting data.
-- Empty installs need allowlisted SQL and audit genesis. Hosted staff CLI fills missing references from PermissionDefinitions within its backup-gated account transaction and rejects conflicts; why: schema-only installs lack seeds, and private links must precede commit.
+## Stack and commands
 
-- V3 PHP facade rejects; preserve UI, never restore old transport.
+- React 19, TypeScript, TanStack Start and Router, Vite, Tailwind CSS v4, shadcn/ui and Radix UI, React Query, React Hook Form and Zod. Bun is the package manager.
+- `bun install`, `bun run dev`, `bun run test`, `bun run lint`, `bun run build`.
+- `src/routeTree.gen.ts` is generated by TanStack Router; do not edit it by hand.
+
+## Design preservation
+
+- The approved design must be preserved: homepage, EHF branding, logo and images, colour palette and `src/styles.css` design tokens (oklch), navigation, admin dashboard, volunteer portal, page layouts, reusable components and responsive behaviour.
+- Admin (`/admin/*`) and volunteer (`/portal/*`) areas share `components/ehf/AppShell`; public pages use `PublicLayout`. Keep navigation consistent through these.
+- Do not redesign pages, and do not replace detailed pages with generic placeholder workspaces. Visual changes need explicit approval.
+- The three `src/assets/*.asset.json` files hold Lovable asset URLs (`/__l5e/assets-v1/...`) instead of image data. Do not substitute, approximate or regenerate these images; the exact originals are to be added with approval.
+
+## Roles and authorisation
+
+- V3 has four roles: Volunteer, Full Admin, Monitoring Admin and Technical Manager. Technical authority (accounts, roles, permissions, settings, security audit) and operational authority (volunteers, projects, approvals, certificates) are separate.
+- The backend is the only authority. Never treat a role label, route, menu item or local state as proof of permission; show or hide actions only from capabilities returned by the API, and expect the API to reject anything else.
+- The existing demo code still uses an older three-role model; it will be migrated to the four roles in a dedicated, approved phase.
+
+## No public registration
+
+- There is no public volunteer application or self-registration. Staff create volunteer records and the Technical Manager provisions invited portal accounts.
+- `/register` and `/application-received` redirect to the homepage through `src/lib/public-access-policy.ts`. Do not add public sign-up or application forms.
+
+## API integration
+
+- `src/lib/php-api.ts` is a retired compatibility facade: every operation rejects with a "not connected" message and makes no network request. Do not restore the old transport. `Php*`-prefixed names are legacy and will be replaced. `docs/legacy-dependencies.json` lists every remaining legacy reference by category with its replacement plan; keep it accurate when those references change.
+- The new client will be typed against the `/api/v3` OpenAPI contract from the API repository, with centralised error handling and loading, empty, success and error states.
+- Show success messages, references, receipts and confirmations only from backend-confirmed responses. Never fabricate success.
+
+## Demo Mode
+
+- Demo Mode is available only when `demoModeAllowed()` (`src/lib/demo-mode.ts`) returns true, which is `import.meta.env.DEV`: the local dev server and Vitest. Every `vite build` compiles it to false.
+- Never add hostname, query-string, environment-variable or storage switches for Demo Mode.
+- Demo Mode must never appear as real data in production, fake successful operations, bypass backend authorisation or mix demo records with production records. Demo screens stay clearly labelled.
+
+## Frontend implementation notes
+
+- Demo workflow state lives in tab-scoped in-memory stores with pure workflow functions, so admin and portal views read back the same records without persistence.
+- Workflow actions read the latest state and guard in-flight actions, so repeated clicks never replay a stale decision or duplicate a record.
+- Document generation runs in browser event handlers with pdf-lib and dynamically imported ExcelJS; PDF previews load PDF.js and its worker after hydration.
+
+## Testing and reporting
+
+- Run `bun run test`, `bun run lint` and `bun run build`, and report actual results. Never claim a check passed unless it ran successfully.
+- Lint currently reports pre-existing Prettier formatting issues in preserved files. Do not mass-reformat preserved files without approval; keep new and rewritten files lint-clean.
+
+## Lovable
+
+- This repository is not connected to Lovable. Whether and how it will be connected has not yet been decided or verified.
+- Until that decision is made, do not add Lovable-specific configuration or instructions, and do not assume how Lovable syncs, edits or manages this repository or its files.

@@ -1,395 +1,692 @@
 {
-  "state": "retained UI/import/DTO references only; transport removed; not a new backend contract",
+  "schemaVersion": 2,
+  "purpose": "Inventory of legacy frontend references that must be replaced during V3 Frontend API Integration (roadmap Phase 12). These are UI-side names, types and call sites only.",
+  "state": "The old network transport is removed. Every facade operation rejects with a 'not connected' message and makes no request. Nothing in this file is a contract for the new V3 backend.",
+  "source": "Generated from the working tree of ehf-volunteer-hub-v3-frontend (snapshot of ea76b78 plus Phase 1 changes). Line numbers refer to that tree; regenerate after edits.",
+  "excluded": [
+    "src/routeTree.gen.ts",
+    "src/test/demo-mode.test.tsx",
+    "src/test/public-registration.test.ts"
+  ],
+  "replacementPlan": {
+    "transport-facade": "Replace src/lib/php-api.ts and src/lib/php-connection.ts with the new typed /api/v3 client (generated from the API repository's OpenAPI contract). Keep the rejecting facade until the client exists.",
+    "legacy-endpoint-call": "Map each call's old operation name (session, login, logout, own, screen, workflow, activate, recover, reset-password, downloads, uploads) to the reviewed /api/v3 resource. Do not reuse the old endpoint shapes.",
+    "legacy-session-dto": "Replace PhpAccess and phpCan with the V3 session/capability types from the API contract (four roles; capabilities supplied by the backend).",
+    "legacy-query-key": "Rename React Query keys to the V3 client's resource keys.",
+    "connection-selector": "Replace usePhpIntegration-based routing with the V3 client's session state; demo screens remain gated by demoModeAllowed().",
+    "php-prefixed-component": "Rewire or rename Php*-prefixed screens to the V3 client while preserving their layout and behaviour.",
+    "retired-login-destination": "ADMIN_LOGIN_URL is fixed to null (V3 retired the external login URL). Remove it when the V3 sign-in flow is integrated.",
+    "facade-import": "Imports of the retired facade modules; they change automatically when the modules above are replaced."
+  },
+  "summary": {
+    "references": 105,
+    "files": 23,
+    "byCategory": {
+      "transport-facade": 8,
+      "legacy-endpoint-call": 17,
+      "legacy-session-dto": 17,
+      "legacy-query-key": 6,
+      "connection-selector": 13,
+      "php-prefixed-component": 31,
+      "retired-login-destination": 7,
+      "facade-import": 6
+    },
+    "byFile": {
+      "src/components/ehf/HomepageSignIn.tsx": 5,
+      "src/components/ehf/ManualHoursWorkspace.tsx": 4,
+      "src/components/ehf/PhpAccountRecovery.tsx": 3,
+      "src/components/ehf/PhpManualHours.tsx": 4,
+      "src/components/ehf/PhpPortalAccess.tsx": 5,
+      "src/components/ehf/PhpReportDownloads.tsx": 3,
+      "src/components/ehf/PhpShell.tsx": 7,
+      "src/components/ehf/PhpWorkspace.tsx": 12,
+      "src/components/ehf/PublicLayout.tsx": 2,
+      "src/lib/admin-login.ts": 1,
+      "src/lib/php-api.ts": 9,
+      "src/lib/php-connection.ts": 3,
+      "src/routes/admin.audit.tsx": 2,
+      "src/routes/admin.tsx": 4,
+      "src/routes/index.tsx": 2,
+      "src/routes/portal-activate.tsx": 4,
+      "src/routes/portal-login.tsx": 4,
+      "src/routes/portal-recover.tsx": 2,
+      "src/routes/portal-reset.tsx": 2,
+      "src/routes/portal.tsx": 4,
+      "src/test/frontend-separation.test.ts": 8,
+      "src/test/php-access.test.ts": 9,
+      "src/test/php-reactivation.test.tsx": 6
+    }
+  },
   "references": [
     {
       "path": "src/components/ehf/HomepageSignIn.tsx",
       "line": 6,
+      "category": "legacy-session-dto",
       "reference": "import { phpRequest, type PhpAccess } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/HomepageSignIn.tsx",
       "line": 21,
+      "category": "legacy-endpoint-call",
       "reference": "void phpRequest<{ access: PhpAccess }>(\"session\").then(({ access }) => {"
     },
     {
       "path": "src/components/ehf/HomepageSignIn.tsx",
       "line": 36,
+      "category": "legacy-endpoint-call",
       "reference": "const result = await phpRequest<{ access: PhpAccess }>(\"login\", { email: email.trim(), password });"
     },
     {
       "path": "src/components/ehf/HomepageSignIn.tsx",
       "line": 39,
+      "category": "legacy-query-key",
       "reference": "queryClient.removeQueries({ queryKey: [\"php-screen\"] });"
     },
     {
       "path": "src/components/ehf/HomepageSignIn.tsx",
       "line": 40,
+      "category": "legacy-query-key",
       "reference": "queryClient.setQueryData([\"php-session\"], result);"
     },
     {
       "path": "src/components/ehf/ManualHoursWorkspace.tsx",
       "line": 10,
+      "category": "connection-selector",
       "reference": "import { usePhpIntegration } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/ManualHoursWorkspace.tsx",
+      "line": 11,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpManualHours } from \"./PhpManualHours\";"
+    },
+    {
+      "path": "src/components/ehf/ManualHoursWorkspace.tsx",
       "line": 19,
+      "category": "connection-selector",
       "reference": "const connected = usePhpIntegration();"
+    },
+    {
+      "path": "src/components/ehf/ManualHoursWorkspace.tsx",
+      "line": 21,
+      "category": "php-prefixed-component",
+      "reference": "return connected ? <PhpManualHours /> : <DemoManualHoursWorkspace />;"
     },
     {
       "path": "src/components/ehf/PhpAccountRecovery.tsx",
       "line": 4,
+      "category": "facade-import",
       "reference": "import { phpRequest } from \"@/lib/php-api\";"
+    },
+    {
+      "path": "src/components/ehf/PhpAccountRecovery.tsx",
+      "line": 7,
+      "category": "php-prefixed-component",
+      "reference": "export function PhpAccountRecovery({ mode, token = \"\" }: { mode: \"activate\" | \"recover\" | \"reset\"; token?: string }) {"
     },
     {
       "path": "src/components/ehf/PhpAccountRecovery.tsx",
       "line": 22,
-      "reference": "try { await phpRequest(mode === \"activate\" ? \"activate\" : mode === \"recover\" ? \"recover\" : \"reset-password\", mode === \"recover\" ? { email } : { token, password, confirm }); setPassword(\"\"); setConfirm(\"\"); setDone(true); }"
+      "category": "legacy-endpoint-call",
+      "reference": "try { await phpRequest(mode === \"activate\" ? \"activate\" : mode === \"recover\" ? \"recover\" : \"reset-password\", mode === \"recover\" ? { email } : { token, password, confirm }); setPassword(\"\"); setConfirm(\"\"); setDone(tru..."
     },
     {
       "path": "src/components/ehf/PhpManualHours.tsx",
       "line": 4,
+      "category": "facade-import",
       "reference": "import { phpRequest } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/PhpManualHours.tsx",
+      "line": 7,
+      "category": "php-prefixed-component",
+      "reference": "export function PhpManualHours({ showHeading = true }: { showHeading?: boolean }) {"
+    },
+    {
+      "path": "src/components/ehf/PhpManualHours.tsx",
       "line": 19,
+      "category": "legacy-endpoint-call",
       "reference": "useEffect(() => { phpRequest<Own>(`own?q=${encodeURIComponent(choiceQ)}&page=${choicePage}`).then(setOwn).catch(e => setError(e.message)); }, [choiceQ, choicePage]);"
     },
     {
       "path": "src/components/ehf/PhpManualHours.tsx",
       "line": 24,
-      "reference": "try { const result = await phpRequest<{ result: number }>(\"workflow\", { operation: \"hours\", project_id: Number(project), hours: { date, end_date: endDate, start, end, comments } }); setSaved(`Manual hours submitted \u00b7 Pending Approval \u00b7 Entry ${result.result}`); }"
+      "category": "legacy-endpoint-call",
+      "reference": "try { const result = await phpRequest<{ result: number }>(\"workflow\", { operation: \"hours\", project_id: Number(project), hours: { date, end_date: endDate, start, end, comments } }); setSaved(`Manual hours submitted · ..."
     },
     {
       "path": "src/components/ehf/PhpPortalAccess.tsx",
       "line": 4,
+      "category": "facade-import",
       "reference": "import { phpRequest } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/PhpPortalAccess.tsx",
       "line": 5,
+      "category": "legacy-session-dto",
       "reference": "import type { PhpAccess } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/PhpPortalAccess.tsx",
+      "line": 9,
+      "category": "php-prefixed-component",
+      "reference": "export function PhpPortalAccess() {"
+    },
+    {
+      "path": "src/components/ehf/PhpPortalAccess.tsx",
       "line": 18,
+      "category": "legacy-endpoint-call",
       "reference": "void phpRequest<{ access: PhpAccess }>(\"session\").then(({ access }) => {"
     },
     {
       "path": "src/components/ehf/PhpPortalAccess.tsx",
       "line": 27,
-      "reference": "try { const result = await phpRequest<{ access: PhpAccess }>(\"login\", { email, password }); setPassword(\"\"); await queryClient.cancelQueries(); queryClient.removeQueries({ queryKey: [\"php-screen\"] }); queryClient.setQueryData([\"php-session\"], result); await navigate({ to: result.access.role === \"volunteer\" ? \"/portal\" : \"/admin\" }); }"
+      "category": "legacy-endpoint-call",
+      "reference": "try { const result = await phpRequest<{ access: PhpAccess }>(\"login\", { email, password }); setPassword(\"\"); await queryClient.cancelQueries(); queryClient.removeQueries({ queryKey: [\"php-screen\"] }); queryClient.setQ..."
     },
     {
       "path": "src/components/ehf/PhpReportDownloads.tsx",
       "line": 4,
+      "category": "facade-import",
       "reference": "import { phpDownload } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/PhpReportDownloads.tsx",
+      "line": 6,
+      "category": "php-prefixed-component",
+      "reference": "export function PhpReportDownloads() {"
+    },
+    {
+      "path": "src/components/ehf/PhpReportDownloads.tsx",
       "line": 19,
+      "category": "legacy-endpoint-call",
       "reference": "try { await phpDownload(`reports/export?kind=${encodeURIComponent(kind)}&format=${format}&q=${encodeURIComponent(q)}&from=${from}&to=${to}&dir=${dir}`, `${kind}.${format}`); }"
     },
     {
       "path": "src/components/ehf/PhpShell.tsx",
       "line": 6,
+      "category": "php-prefixed-component",
       "reference": "import { PhpWorkspace } from \"./PhpWorkspace\";"
     },
     {
       "path": "src/components/ehf/PhpShell.tsx",
+      "line": 7,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpPortalAccess } from \"./PhpPortalAccess\";"
+    },
+    {
+      "path": "src/components/ehf/PhpShell.tsx",
       "line": 8,
+      "category": "legacy-session-dto",
       "reference": "import { phpRequest, type PhpAccess } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/PhpShell.tsx",
       "line": 46,
-      "reference": "export function PhpShell({ area }: { area: \"admin\" | \"portal\" }) { return <PhpError><Suspense fallback={<p role=\"status\" className=\"p-8\">Checking session\u2026</p>}><Shell area={area} /></Suspense></PhpError>; }"
+      "category": "php-prefixed-component",
+      "reference": "export function PhpShell({ area }: { area: \"admin\" | \"portal\" }) { return <PhpError><Suspense fallback={<p role=\"status\" className=\"p-8\">Checking session…</p>}><Shell area={area} /></Suspense></PhpError>; }"
     },
     {
       "path": "src/components/ehf/PhpShell.tsx",
       "line": 50,
+      "category": "legacy-endpoint-call",
       "reference": "const { data } = useSuspenseQuery({ queryKey: [\"php-session\"], queryFn: () => phpRequest<{ access: PhpAccess }>(\"session\"), retry: false, staleTime: 0 });"
     },
     {
       "path": "src/components/ehf/PhpShell.tsx",
+      "line": 52,
+      "category": "php-prefixed-component",
+      "reference": "if (!access.authenticated) return <PhpPortalAccess />;"
+    },
+    {
+      "path": "src/components/ehf/PhpShell.tsx",
       "line": 60,
-      "reference": "return <AppShell connected title={area === \"portal\" ? \"Volunteer Portal\" : \"EHF Management \u00b7 Administrator Workspace\"} role={access.role === \"technical_system_administrator\" ? \"Technical System Administrator\" : access.role === \"admin\" ? \"Admin\" : \"Volunteer\"} user={access.email ?? \"Account\"} items={items} blocked={blocked} onLogout={async () => { await queryClient.cancelQueries(); await phpRequest(\"logout\", {}); queryClient.clear(); await navigate({ to: \"/portal-login\", replace: true }); }}><PhpError key={path}><PhpWorkspace screen={`${area}/${key}`} /></PhpError></AppShell>;"
+      "category": "legacy-endpoint-call",
+      "reference": "return <AppShell connected title={area === \"portal\" ? \"Volunteer Portal\" : \"EHF Management · Administrator Workspace\"} role={access.role === \"technical_system_administrator\" ? \"Technical System Administrator\" : access..."
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 7,
+      "category": "legacy-session-dto",
       "reference": "import { phpRequest, phpCan, phpDownload, phpUpload, type PhpAccess } from \"@/lib/php-api\";"
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
+      "line": 8,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpManualHours } from \"./PhpManualHours\";"
+    },
+    {
+      "path": "src/components/ehf/PhpWorkspace.tsx",
+      "line": 9,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpReportDownloads } from \"./PhpReportDownloads\";"
+    },
+    {
+      "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 12,
+      "category": "legacy-session-dto",
       "reference": "type Screen = { rows: Row[]; total: number; page: number; extras: Record<string, Row[]>; session: PhpAccess };"
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 28,
+      "category": "php-prefixed-component",
       "reference": "export function PhpWorkspace({ screen }: { screen: string }) {"
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 35,
-      "reference": "const { data } = useSuspenseQuery({ queryKey: [\"php-screen\", screen, q, page, status, optionQ, optionPage], queryFn: () => phpRequest<Screen>(`screen?screen=${encodeURIComponent(screen)}&q=${encodeURIComponent(q)}&page=${page}&status=${encodeURIComponent(status)}&option_q=${encodeURIComponent(optionQ)}&option_page=${optionPage}`), retry: false, staleTime: 0 });"
+      "category": "legacy-endpoint-call",
+      "reference": "const { data } = useSuspenseQuery({ queryKey: [\"php-screen\", screen, q, page, status, optionQ, optionPage], queryFn: () => phpRequest<Screen>(`screen?screen=${encodeURIComponent(screen)}&q=${encodeURIComponent(q)}&pag..."
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 41,
+      "category": "legacy-session-dto",
       "reference": "const can = (action: string, row?: Row) => phpCan(data.session, action, row?.[\"project_id\"] === undefined ? undefined : Number(row[\"project_id\"]));"
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 44,
-      "reference": "try { const response = await phpRequest<{ result: unknown }>(\"workflow\", { operation, ...input }); if ([\"audit_verify\", \"integrity_check\"].includes(operation)) setCheckResult(response.result); await queryClient.invalidateQueries({ queryKey: [\"php-screen\"] }); await queryClient.invalidateQueries({ queryKey: [\"php-session\"] }); setEdit(null); setSuccess(\"Saved by the EHF system.\"); }"
+      "category": "legacy-endpoint-call",
+      "reference": "try { const response = await phpRequest<{ result: unknown }>(\"workflow\", { operation, ...input }); if ([\"audit_verify\", \"integrity_check\"].includes(operation)) setCheckResult(response.result); await queryClient.invali..."
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
       "line": 100,
+      "category": "legacy-endpoint-call",
       "reference": "async function download(path: string, name: string) { try { await phpDownload(path, name); } catch (e) { setError(e instanceof Error ? e.message : \"Download failed.\"); } }"
     },
     {
       "path": "src/components/ehf/PhpWorkspace.tsx",
-      "line": 119,
-      "reference": "{key === \"task-reports\" && detail && <><h3 className=\"font-bold\">Attachments</h3>{(data.extras[\"files\"] ?? []).filter(f => f[\"report_id\"] === detail[\"id\"]).map(f => <Button key={String(f[\"id\"])} variant=\"outline\" onClick={() => download(`files/${f[\"id\"]}/download`, String(f[\"display_name\"]))}>{text(f[\"display_name\"])}</Button>)}{portal && [\"draft\", \"changes_requested\"].includes(String(detail[\"status\"])) && <label>Upload attachment<input type=\"file\" accept=\".txt,.pdf,.png,.jpg\" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; try { await phpUpload(Number(detail[\"id\"]), file); await queryClient.invalidateQueries({ queryKey: [\"php-screen\"] }); setSuccess(\"Attachment saved.\"); } catch (err) { setError(err instanceof Error ? err.message : \"Upload failed.\"); } }} /></label>}</>}"
+      "line": 107,
+      "category": "php-prefixed-component",
+      "reference": "{key === \"reports\" && moduleCan(\"reports.export\") && <PhpReportDownloads />}"
     },
     {
-      "path": "src/components/ehf/PreviewOnly.tsx",
-      "line": 2,
-      "reference": "import { ADMIN_DEMO_MODE_FORCED, isPreviewHost } from \"@/lib/admin-login\";"
+      "path": "src/components/ehf/PhpWorkspace.tsx",
+      "line": 108,
+      "category": "php-prefixed-component",
+      "reference": "{key === \"dashboard\" ? <div className=\"grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4\">{data.rows.map(row => <Kpi key={text(row[\"id\"])} icon={BarChart3} value={text(row[\"value\"])} label={text(row[\"label\"])} />)}..."
+    },
+    {
+      "path": "src/components/ehf/PhpWorkspace.tsx",
+      "line": 119,
+      "category": "legacy-endpoint-call",
+      "reference": "{key === \"task-reports\" && detail && <><h3 className=\"font-bold\">Attachments</h3>{(data.extras[\"files\"] ?? []).filter(f => f[\"report_id\"] === detail[\"id\"]).map(f => <Button key={String(f[\"id\"])} variant=\"outline\" onCl..."
     },
     {
       "path": "src/components/ehf/PublicLayout.tsx",
       "line": 4,
+      "category": "retired-login-destination",
       "reference": "import { ADMIN_LOGIN_URL } from \"@/lib/admin-login\";"
+    },
+    {
+      "path": "src/components/ehf/PublicLayout.tsx",
+      "line": 20,
+      "category": "retired-login-destination",
+      "reference": "{ADMIN_LOGIN_URL ? <a href={ADMIN_LOGIN_URL} className=\"rounded-md bg-primary px-3 py-2 text-center text-xs font-semibold text-primary-foreground hover:bg-primary/90 sm:px-4 sm:text-sm\">Admin Dashboard</a> : <Link to=..."
+    },
+    {
+      "path": "src/lib/admin-login.ts",
+      "line": 2,
+      "category": "retired-login-destination",
+      "reference": "export const ADMIN_LOGIN_URL: string | null = null;"
     },
     {
       "path": "src/lib/php-api.ts",
       "line": 2,
+      "category": "facade-import",
       "reference": "import { phpConnectionMessage } from \"./php-connection\";"
     },
     {
       "path": "src/lib/php-api.ts",
+      "line": 9,
+      "category": "transport-facade",
+      "reference": "export function phpIntegrationEnabled() {"
+    },
+    {
+      "path": "src/lib/php-api.ts",
       "line": 13,
+      "category": "transport-facade",
       "reference": "export function usePhpIntegration() {"
     },
     {
       "path": "src/lib/php-api.ts",
+      "line": 15,
+      "category": "connection-selector",
+      "reference": "useEffect(() => setEnabled(phpIntegrationEnabled()), []);"
+    },
+    {
+      "path": "src/lib/php-api.ts",
       "line": 18,
+      "category": "transport-facade",
       "reference": "export async function phpRequest<T>(path: string, data?: Record<string, unknown>): Promise<T> {"
     },
     {
       "path": "src/lib/php-api.ts",
       "line": 24,
+      "category": "legacy-session-dto",
       "reference": "export type PhpAccess = {"
     },
     {
       "path": "src/lib/php-api.ts",
       "line": 31,
+      "category": "legacy-session-dto",
       "reference": "export function phpCan(access: PhpAccess, action: string, project?: number) {"
     },
     {
       "path": "src/lib/php-api.ts",
       "line": 37,
+      "category": "transport-facade",
       "reference": "export async function phpDownload(path: string, filename: string) {"
     },
     {
       "path": "src/lib/php-api.ts",
       "line": 42,
+      "category": "transport-facade",
       "reference": "export async function phpUpload(report: number, file: File): Promise<{ id: number }> {"
     },
     {
-      "path": "src/lib/portal-demo.ts",
-      "line": 1,
-      "reference": "import { ADMIN_DEMO_MODE_FORCED, isPreviewHost } from './admin-login';"
+      "path": "src/lib/php-connection.ts",
+      "line": 2,
+      "category": "transport-facade",
+      "reference": "export function phpConnectionMessage(hostname: string, configured?: string): string {"
+    },
+    {
+      "path": "src/lib/php-connection.ts",
+      "line": 7,
+      "category": "transport-facade",
+      "reference": "export function explicitDemoMode(hostname: string, search: string): boolean {"
+    },
+    {
+      "path": "src/lib/php-connection.ts",
+      "line": 12,
+      "category": "transport-facade",
+      "reference": "export function phpApiBase(hostname: string, configured?: string): string | null {"
     },
     {
       "path": "src/routes/admin.audit.tsx",
       "line": 2,
+      "category": "php-prefixed-component",
       "reference": "import { PhpWorkspace } from \"@/components/ehf/PhpWorkspace\";"
     },
     {
       "path": "src/routes/admin.audit.tsx",
       "line": 4,
+      "category": "php-prefixed-component",
       "reference": "export const Route = createFileRoute(\"/admin/audit\")({ head: () => meta(\"EHF Audit History\"), component: () => <PhpWorkspace screen=\"admin/audit\" /> });"
     },
     {
       "path": "src/routes/admin.tsx",
-      "line": 19,
-      "reference": "import { ADMIN_DEMO_MODE_FORCED, isPreviewHost } from \"@/lib/admin-login\";"
-    },
-    {
-      "path": "src/routes/admin.tsx",
       "line": 22,
+      "category": "connection-selector",
       "reference": "import { usePhpIntegration } from \"@/lib/php-api\";"
     },
     {
       "path": "src/routes/admin.tsx",
       "line": 23,
+      "category": "php-prefixed-component",
       "reference": "import { PhpShell } from \"@/components/ehf/PhpShell\";"
     },
     {
       "path": "src/routes/admin.tsx",
-      "line": 142,
+      "line": 139,
+      "category": "connection-selector",
       "reference": "const connected = usePhpIntegration();"
     },
     {
       "path": "src/routes/admin.tsx",
-      "line": 144,
+      "line": 141,
+      "category": "php-prefixed-component",
       "reference": "return connected ? <PhpShell area=\"admin\" /> : <AdminLayout />;"
     },
     {
       "path": "src/routes/index.tsx",
       "line": 8,
+      "category": "retired-login-destination",
       "reference": "import { ADMIN_LOGIN_URL } from \"@/lib/admin-login\";"
+    },
+    {
+      "path": "src/routes/index.tsx",
+      "line": 37,
+      "category": "retired-login-destination",
+      "reference": "<Button asChild className=\"homepage-nav-button\">{ADMIN_LOGIN_URL ? <a href={ADMIN_LOGIN_URL}><UserRoundCog />Admin Log In</a> : <Link to=\"/admin\"><UserRoundCog />Admin Log In</Link>}</Button>"
+    },
+    {
+      "path": "src/routes/portal-activate.tsx",
+      "line": 4,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpAccountRecovery } from \"@/components/ehf/PhpAccountRecovery\";"
     },
     {
       "path": "src/routes/portal-activate.tsx",
       "line": 5,
+      "category": "connection-selector",
       "reference": "import { usePhpIntegration } from \"@/lib/php-api\";"
     },
     {
       "path": "src/routes/portal-activate.tsx",
       "line": 14,
+      "category": "connection-selector",
       "reference": "const connected = usePhpIntegration();"
+    },
+    {
+      "path": "src/routes/portal-activate.tsx",
+      "line": 16,
+      "category": "php-prefixed-component",
+      "reference": "return connected ? <PhpAccountRecovery mode=\"activate\" token={token ?? \"\"} /> : <PortalAccessScreen invitation={invitation ?? \"\"} />;"
     },
     {
       "path": "src/routes/portal-login.tsx",
       "line": 4,
+      "category": "connection-selector",
       "reference": "import { usePhpIntegration } from \"@/lib/php-api\";"
     },
     {
       "path": "src/routes/portal-login.tsx",
+      "line": 5,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpPortalAccess } from \"@/components/ehf/PhpPortalAccess\";"
+    },
+    {
+      "path": "src/routes/portal-login.tsx",
       "line": 7,
+      "category": "connection-selector",
       "reference": "const connected = usePhpIntegration();"
+    },
+    {
+      "path": "src/routes/portal-login.tsx",
+      "line": 9,
+      "category": "php-prefixed-component",
+      "reference": "return connected ? <PhpPortalAccess /> : <PortalAccessScreen />;"
+    },
+    {
+      "path": "src/routes/portal-recover.tsx",
+      "line": 2,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpAccountRecovery } from \"@/components/ehf/PhpAccountRecovery\";"
+    },
+    {
+      "path": "src/routes/portal-recover.tsx",
+      "line": 4,
+      "category": "php-prefixed-component",
+      "reference": "export const Route = createFileRoute(\"/portal-recover\")({ head: () => meta(\"EHF Account Recovery\"), component: () => <PhpAccountRecovery mode=\"recover\" /> });"
+    },
+    {
+      "path": "src/routes/portal-reset.tsx",
+      "line": 2,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpAccountRecovery } from \"@/components/ehf/PhpAccountRecovery\";"
+    },
+    {
+      "path": "src/routes/portal-reset.tsx",
+      "line": 9,
+      "category": "php-prefixed-component",
+      "reference": "function Reset() { return <PhpAccountRecovery mode=\"reset\" token={Route.useSearch().token} />; }"
     },
     {
       "path": "src/routes/portal.tsx",
       "line": 26,
+      "category": "connection-selector",
       "reference": "import { usePhpIntegration } from \"@/lib/php-api\";"
     },
     {
       "path": "src/routes/portal.tsx",
       "line": 27,
+      "category": "php-prefixed-component",
       "reference": "import { PhpShell } from \"@/components/ehf/PhpShell\";"
     },
     {
       "path": "src/routes/portal.tsx",
       "line": 29,
+      "category": "connection-selector",
       "reference": "const connected = usePhpIntegration();"
     },
     {
       "path": "src/routes/portal.tsx",
       "line": 31,
+      "category": "php-prefixed-component",
       "reference": "return connected ? <PhpShell area=\"portal\" /> : <PreviewOnly><PortalLayout /></PreviewOnly>;"
     },
     {
       "path": "src/test/frontend-separation.test.ts",
       "line": 2,
+      "category": "connection-selector",
       "reference": "import { phpRequest, phpDownload, phpUpload, phpIntegrationEnabled } from \"@/lib/php-api\";"
     },
     {
       "path": "src/test/frontend-separation.test.ts",
       "line": 3,
+      "category": "facade-import",
       "reference": "import { explicitDemoMode, phpApiBase } from \"@/lib/php-connection\";"
     },
     {
       "path": "src/test/frontend-separation.test.ts",
       "line": 4,
+      "category": "retired-login-destination",
       "reference": "import { ADMIN_LOGIN_URL } from \"@/lib/admin-login\";"
     },
     {
       "path": "src/test/frontend-separation.test.ts",
+      "line": 13,
+      "category": "retired-login-destination",
+      "reference": "expect(ADMIN_LOGIN_URL).toBeNull());"
+    },
+    {
+      "path": "src/test/frontend-separation.test.ts",
+      "line": 17,
+      "category": "connection-selector",
+      "reference": "expect(phpIntegrationEnabled()).toBe(true);"
+    },
+    {
+      "path": "src/test/frontend-separation.test.ts",
       "line": 25,
+      "category": "legacy-endpoint-call",
       "reference": "phpRequest(path, { email: \"test@example.invalid\", password: \"Synthetic test input\" }),"
     },
     {
       "path": "src/test/frontend-separation.test.ts",
       "line": 33,
+      "category": "legacy-endpoint-call",
       "reference": "await expect(phpDownload(\"reports/export\", \"report.csv\")).rejects.toThrow();"
     },
     {
       "path": "src/test/frontend-separation.test.ts",
       "line": 34,
+      "category": "legacy-endpoint-call",
       "reference": "await expect(phpUpload(1, new File([\"test\"], \"test.txt\"))).rejects.toThrow();"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 2,
+      "category": "legacy-session-dto",
       "reference": "import { phpCan, type PhpAccess } from \"@/lib/php-api\";"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 4,
+      "category": "legacy-session-dto",
       "reference": "const base: PhpAccess = { authenticated: true, role: \"admin\", email: null, volunteer_id: null, capabilities: {} };"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 7,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan(base, \"projects.create\")).toBe(false);"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 11,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan(scoped, \"projects.edit\", 10)).toBe(true);"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 12,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan(scoped, \"projects.edit\", 11)).toBe(false);"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 13,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan(scoped, \"projects.edit\")).toBe(false);"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 16,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan({ ...base, role: \"technical_system_administrator\" }, \"projects.create\")).toBe(false);"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 20,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan(read, \"reports.view\", 10)).toBe(true);"
     },
     {
       "path": "src/test/php-access.test.ts",
       "line": 21,
+      "category": "legacy-session-dto",
       "reference": "expect(phpCan(read, \"reports.export\", 10)).toBe(false);"
     },
     {
       "path": "src/test/php-reactivation.test.tsx",
-      "line": 5,
-      "reference": "vi.mock(\"@/lib/php-api\", () => ({ phpRequest: mocks.request }));"
+      "line": 8,
+      "category": "php-prefixed-component",
+      "reference": "import { PhpPortalAccess } from \"@/components/ehf/PhpPortalAccess\";"
     },
     {
       "path": "src/test/php-reactivation.test.tsx",
       "line": 14,
+      "category": "legacy-query-key",
       "reference": "client.setQueryData([\"php-session\"], { access: { authenticated: false } });"
     },
     {
       "path": "src/test/php-reactivation.test.tsx",
       "line": 15,
+      "category": "legacy-query-key",
       "reference": "client.setQueryData([\"php-screen\", \"portal/profile\"], { rows: [{ id: 2 }] });"
     },
     {
       "path": "src/test/php-reactivation.test.tsx",
+      "line": 16,
+      "category": "php-prefixed-component",
+      "reference": "render(<QueryClientProvider client={client}><PhpPortalAccess /></QueryClientProvider>);"
+    },
+    {
+      "path": "src/test/php-reactivation.test.tsx",
       "line": 21,
+      "category": "legacy-query-key",
       "reference": "expect(client.getQueryData([\"php-session\"])).toEqual(confirmed);"
     },
     {
       "path": "src/test/php-reactivation.test.tsx",
       "line": 22,
+      "category": "legacy-query-key",
       "reference": "expect(client.getQueryData([\"php-screen\", \"portal/profile\"])).toBeUndefined();"
-    },
-    {
-      "path": "src/test/preview-host.test.ts",
-      "line": 2,
-      "reference": "import { isPreviewHost } from \"@/lib/admin-login\";"
     }
   ]
 }
