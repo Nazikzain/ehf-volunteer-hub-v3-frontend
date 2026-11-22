@@ -1,0 +1,21 @@
+import { describe,it,expect } from 'vitest';
+import { applications,volunteers } from '@/lib/demo-data';
+import { EMPTY_ACCESS,acceptedVolunteers,accountStatus,inviteAccount,activateAccount,setAccountAccess,demoSignIn } from '@/lib/portal-access';
+import { canAccess } from '@/lib/demo-roles';
+const wf={applications,volunteers},role={role:'Technical System Administrator',accountId:'U-01'},at='2026-11-10T23:00:00Z';
+const invite=()=>inviteAccount(structuredClone(EMPTY_ACCESS),wf,'V-1038',role,at);
+const marker=(s:ReturnType<typeof invite>)=>s.accounts[0]?.invitation?.marker??'';
+describe('demo portal provisioning',()=>{
+ it('only accepted volunteers are eligible',()=>{expect(acceptedVolunteers(wf).map(v=>v.id)).toEqual(['V-1042','V-1038','V-1015']);expect(()=>inviteAccount(EMPTY_ACCESS,wf,'V-1031',role,at)).toThrow('accepted');});
+ it('uses existing email and identity with Volunteer role only',()=>{expect(invite().accounts[0]).toMatchObject({volunteerId:'V-1038',email:'fatima.m@example.org',role:'Volunteer',status:'Invitation Pending'});expect(volunteers).toHaveLength(6);});
+ it.each(['Admin','Volunteer'] as const)('denies provisioning to %s',r=>expect(()=>inviteAccount(EMPTY_ACCESS,wf,'V-1038',{role:r},at)).toThrow('Technical'));
+ it('rejects a technical role claim without a current technical account',()=>{expect(()=>inviteAccount(EMPTY_ACCESS,wf,'V-1038',{role:'Technical System Administrator',accountId:'U-02'},at)).toThrow('Technical');expect(()=>setAccountAccess(invite(),'V-1038',{role:'Technical System Administrator'},'Suspended',at)).toThrow('Technical');});
+ it('resends without duplicates and invalidates the old marker',()=>{const s=invite(),next=inviteAccount(s,wf,'V-1038',role,at);expect(next.accounts).toHaveLength(1);expect(()=>activateAccount(next,marker(s),at)).toThrow('invalid');});
+ it('activation is single use and expires at 48 hours',()=>{const s=invite();expect(accountStatus(s.accounts[0],'2026-11-12T23:00:00Z')).toBe('Invitation Expired');expect(()=>activateAccount(s,marker(s),'2026-11-12T23:00:00Z')).toThrow('expired');const active=activateAccount(s,marker(s),at);expect(active.accounts[0]?.status).toBe('Active');expect(()=>activateAccount(active,marker(s),at)).toThrow('used');});
+ it('no account is Not Created and pending account cannot sign in',()=>{expect(accountStatus(undefined,at)).toBe('Not Created');expect(()=>demoSignIn(invite(),'fatima.m@example.org',at)).toThrow('Activate');});
+ it('sign-in scopes session to existing ID without a stored password',()=>{const s=invite(),active=activateAccount(s,marker(s),at);expect(demoSignIn(active,'fatima.m@example.org',at).sessionId).toBe('V-1038');expect(JSON.stringify(active)).not.toContain('passwordHash');});
+ it('suspension removes session and prevents activation/sign-in; reactivation restores activated accounts only',()=>{const s=invite(),active=demoSignIn(activateAccount(s,marker(s),at),'fatima.m@example.org',at);const suspended=setAccountAccess(active,'V-1038',role,'Suspended',at);expect(suspended.sessionId).toBeNull();expect(()=>demoSignIn(suspended,'fatima.m@example.org',at)).toThrow();expect(setAccountAccess(suspended,'V-1038',role,'Active',at).accounts[0]?.status).toBe('Active');expect(()=>setAccountAccess(setAccountAccess(s,'V-1038',role,'Suspended',at),'V-1038',role,'Active',at)).toThrow('previously');});
+ it('recovery resets active session and uses a new single-use marker',()=>{const s=invite(),active=demoSignIn(activateAccount(s,marker(s),at),'fatima.m@example.org',at),recovery=inviteAccount(active,wf,'V-1038',role,at,'recovery');expect(recovery.sessionId).toBeNull();expect(recovery.accounts[0]?.invitation?.kind).toBe('recovery');expect(activateAccount(recovery,marker(recovery),at).accounts[0]?.status).toBe('Active');});
+ it('rejects duplicate email identities',()=>{const duplicate={...wf,volunteers:wf.volunteers.map(v=>v.id==='V-1015'?{...v,email:'fatima.m@example.org'}:v)};expect(()=>inviteAccount(invite(),duplicate,'V-1015',role,at)).toThrow('email already');});
+ it('technical provisioning grants no organisational access',()=>{expect(canAccess(role,'/admin/portal-access')).toBe(true);for(const path of ['/admin/applications','/admin/volunteers','/admin/assignments','/admin/time-logs','/admin/performance','/admin/certificates'])expect(canAccess(role,path)).toBe(false);});
+});
