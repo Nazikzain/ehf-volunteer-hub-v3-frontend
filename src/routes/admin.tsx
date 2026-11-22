@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/ehf/AppShell";
 import { PublicLayout } from "@/components/ehf/PublicLayout";
-import { useEffect, useState } from "react";
-import { ADMIN_DEMO_MODE_FORCED, isPreviewHost } from "@/lib/admin-login";
+import { useState } from "react";
+import { demoModeAllowed } from "@/lib/demo-mode";
 import { canAccess, useAdminAccess } from "@/lib/demo-roles";
 import { DemoActorContext } from "@/lib/demo-context";
 import { usePhpIntegration } from "@/lib/php-api";
@@ -50,12 +50,9 @@ function AdminLocked() {
   );
 }
 
+// Demo Mode is a build-time decision (local development and tests only), never a hostname check.
 function useDemoMode(): boolean | null {
-  const [demo, setDemo] = useState<boolean | null>(ADMIN_DEMO_MODE_FORCED ? true : null);
-  useEffect(() => {
-    if (!ADMIN_DEMO_MODE_FORCED) setDemo(isPreviewHost(window.location.hostname));
-  }, []);
-  return demo;
+  return demoModeAllowed();
 }
 
 const NAV_ITEMS: NavItem[] = [

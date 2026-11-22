@@ -1,4 +1,4 @@
-import { ADMIN_DEMO_MODE_FORCED, isPreviewHost } from './admin-login';
+import { demoModeAllowed } from './demo-mode';
 import { volunteers } from './demo-data';
 import { getWorkflow, setWorkflow } from './workflow-store';
 import { getPortal, initialPortal, setPortal } from './portal-workflow';
@@ -12,7 +12,7 @@ const sourceId = 'V-1042';
 const at = '2026-11-01T10:00:00.000Z';
 const REVIEW_MARKER = 'ehf-portal-review-demo';
 function previewAvailable() {
-  return typeof window !== 'undefined' && (ADMIN_DEMO_MODE_FORCED || isPreviewHost(window.location.hostname));
+  return typeof window !== 'undefined' && demoModeAllowed();
 }
 export function restorePortalDemo() {
   if (!previewAvailable() || getAccess().sessionId) return;
